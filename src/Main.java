@@ -6,28 +6,41 @@ import java.io.IOException;
 public class Main {
 
     private static int layerNum = 3;
-    private static int nodeNum = 10;
+    private static int nodeNum = 24;
     private static int outputLayerNodeNum = 2;
+    private static int conNum = 4;
+    private static Net net;
 
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Building The Net..");
-        Net net = CreateNet(layerNum, nodeNum, outputLayerNodeNum);
-        net.saveNetToCSV("savedNets");
+       net = new Net(layerNum, nodeNum, outputLayerNodeNum, conNum);
+       // net.saveNetToCSV("savedNets");
+//        Net newNet = new Net("savedNets/1531807192005.csv");
 //        System.out.println(net);
 
-//        int result = getResultForImage("");
-//        System.out.println("result: " +result);
+        int result = getResultForImage("images/01.png");
+        System.out.println("result: " + result);
 
     }
 
-    private static int getResultForImage(String pathToFile) throws IOException {
+    private static int getResultForImage(String pathToImage) throws IOException {
 
-        Layer inputLayer = createInputLayer(pathToFile);
+        Layer inputLayer = createInputLayer(pathToImage);
+
+
+        //System.out.println(inputLayer);
+
+        inputLayer.fireInputLayer(net.layerList.get(0));
+
+        net.fireUp();
+
+        System.out.println(net.printAllConnection());
 
         return calcOutput();
     }
 
     private static int calcOutput() {
+
         return 0;
     }
 
@@ -37,14 +50,8 @@ public class Main {
         return new Layer(bufferedImage.getHeight(), layerNum, bufferedImage);
     }
 
-    private static Net CreateNet(int layerNum, int nodeNum, int outputLayerNodeNum) {
-
-        return new Net(layerNum, nodeNum, outputLayerNodeNum);
-    }
-
-    public static double round(double value, int places) {
+    public static double toNDecimalPlaces(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
-
         long factor = (long) Math.pow(10, places);
         value = value * factor;
         long tmp = Math.round(value);

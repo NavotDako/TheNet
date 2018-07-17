@@ -1,24 +1,46 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class Net {
-    static List<Layer> layerList;
+    public static List<Layer> layerList;
     static Layer outputLayer;
     static int nodeNum;
+    static int conNum;
 
-    public Net(int layerNum, int nodeNum, int outputLayerNodeNum) {
+    public Net(int layerNum, int nodeNum, int outputLayerNodeNum, int conNum) {
         this.nodeNum = nodeNum;
+        this.conNum = conNum;
         layerList = new ArrayList<>();
         for (int i = 0; i < layerNum; i++) {
             layerList.add(new Layer(nodeNum, i));
         }
 
-        CreateConnections();
+        CreateConnections(conNum);
         CreateOutputLayer(outputLayerNodeNum);
+    }
+
+    public Net(String pathToCSV) throws FileNotFoundException {
+        FileReader fr = new FileReader(new File(pathToCSV));
+
+    }
+
+    private List<String> readFile(String filename) {
+        List<String> records = new ArrayList<String>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                records.add(line);
+            }
+            reader.close();
+            return records;
+        } catch (Exception e) {
+            System.err.format("Exception occurred trying to read '%s'.", filename);
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void CreateOutputLayer(int outputLayerNodeNum) {
@@ -31,11 +53,11 @@ public class Net {
         }
     }
 
-    private void CreateConnections() {
+    private void CreateConnections(int conNum) {
         for (int i = 0; i < layerList.size() - 1; i++) {
             for (int j = 0; j < layerList.get(i).nodeMat.length; j++) {
                 for (int k = 0; k < layerList.get(i).nodeMat.length; k++) {
-                    layerList.get(i).nodeMat[j][k].createConnections(3);
+                    layerList.get(i).nodeMat[j][k].createConnections(conNum);
                 }
             }
         }
@@ -48,7 +70,6 @@ public class Net {
             s += "layer " + i + "\n";
             s += layerList.get(i).toString();
         }
-
         s += "Output Layer\n" + outputLayer.toString();
         return s;
     }
@@ -96,7 +117,7 @@ public class Net {
         File csvFile = new File(savedNets + "/" + System.currentTimeMillis() + ".csv");
         FileWriter fw = new FileWriter(csvFile);
 
-        String s = String.format("%-5s,%-5s,%-5s,%-5s,%-5s,%-5s", "L","X", "Y", "val", "top", "c_val") + "\n";
+        String s = String.format("%-5s,%-5s,%-5s,%-5s,%-5s,%-5s", "L", "X", "Y", "val", "top", "c_val") + "\n";
 
         for (int i = 0; i < layerList.size(); i++) {
             s += layerList.get(i).toCSV();
@@ -107,5 +128,24 @@ public class Net {
         fw.flush();
         fw.close();
 
+    }
+
+    public String printAllConnection() {
+        String s = String.format("%-5s,%-5s,%-5s,%-5s,%-5s,%-5s,%-5s,%-5s", "L", "X", "Y", "val", "verge", "tempSum", "top", "c_val") + "\n";
+
+        for (int i = 0; i < layerList.size(); i++) {
+            s += layerList.get(i).toCSV();
+        }
+
+        s += outputLayer.toCSV();
+
+        return s;
+    }
+
+    public void fireUp() {
+        for (int i = 0; i < layerList.size(); i++) {
+            layerList.get(i).fire();
+            //  System.out.println(printAllConnection());
+        }
     }
 }
